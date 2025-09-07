@@ -25,12 +25,11 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Header username={user?.name || null} photoUrl={user?.photoUrl} />
+          <Header user={user} />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/signin" element={user ? <Index /> : <SignIn />} />
             <Route path="/signup" element={user ? <Index /> : <SignUp />} />
-
             {/* Protected routes */}
             <Route
               path="/dashboard"
@@ -56,7 +55,6 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
