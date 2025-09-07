@@ -29,8 +29,8 @@ const Header = ({ user }: HeaderProps) => {
         {/* Navigation */}
         <nav className="flex space-x-6 text-sm font-medium text-gray-700">
           <Link to="/" className="hover:text-primary transition-colors">Home</Link>
-          <Link to="/dashboard" className="hover:text-primary transition-colors">Take Test</Link>
           <Link to="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
+           <Link to="/take-test" className="hover:text-primary transition-colors">Take Test</Link>
           <Link to="/colleges" className="hover:text-primary transition-colors">Colleges</Link>
         </nav>
 
