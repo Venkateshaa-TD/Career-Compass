@@ -10,8 +10,9 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import Result from "./pages/Result";
-import NotFound from "./pages/NotFound";
 import Colleges from "./pages/Colleges";
+import TakeTest from "./pages/TakeTest";
+import NotFound from "./pages/NotFound";
 import { useAuth } from "@/context/AuthContext";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,14 @@ const App = () => {
               }
             />
             <Route
+              path="/take-test"
+              element={
+                <ProtectedRoute>
+                  <TakeTest />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/result"
               element={
                 <ProtectedRoute>
@@ -55,6 +64,7 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+            {/* Catch all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
