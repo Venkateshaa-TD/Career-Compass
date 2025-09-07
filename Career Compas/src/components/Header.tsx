@@ -8,7 +8,6 @@ interface HeaderProps {
   user: {
     name: string;
     photoUrl?: string;
-    // Add more user fields if needed
   } | null;
 }
 
@@ -20,17 +19,24 @@ const Header = ({ user }: HeaderProps) => {
   return (
     <header className="bg-white shadow-md py-4 sticky top-0 z-50">
       <div className="container mx-auto flex items-center justify-between px-4">
-        {/* Title and slogan */}
-        <div>
-          <h1 className="text-2xl font-bold text-primary">Career Compass</h1>
-          <p className="text-xs text-muted-foreground">Especially for students of Jammu and Kashmir</p>
+        {/* Logo and Title */}
+        <div className="flex items-center gap-2">
+          <img
+            src="/favicon.png"
+            alt="Career Compass Logo"
+            className="h-9 w-9 rounded-lg shadow-sm object-cover"
+          />
+          <div>
+            <h1 className="text-2xl font-bold text-primary leading-tight">Career Compass</h1>
+            <p className="text-xs text-muted-foreground">Especially for students of Jammu and Kashmir</p>
+          </div>
         </div>
 
         {/* Navigation */}
         <nav className="flex space-x-6 text-sm font-medium text-gray-700">
           <Link to="/" className="hover:text-primary transition-colors">Home</Link>
+          <Link to="/take-test" className="hover:text-primary transition-colors">Take Test</Link>
           <Link to="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
-           <Link to="/take-test" className="hover:text-primary transition-colors">Take Test</Link>
           <Link to="/colleges" className="hover:text-primary transition-colors">Colleges</Link>
         </nav>
 
