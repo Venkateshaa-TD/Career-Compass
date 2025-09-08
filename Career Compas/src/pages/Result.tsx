@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,6 +70,15 @@ const Result = () => {
 
   const overallPerformance = getPerformanceLevel(totalScore.percentage);
 
+  // ADDED: Read interested field from localStorage (minimal addition)
+  const interestField = useMemo(() => {
+    try {
+      return localStorage.getItem("interestField");
+    } catch {
+      return null;
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted to-background">
       {/* Header */}
@@ -95,6 +104,19 @@ const Result = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8">
+
+        {/* ADDED: Interested Field (minimal, above overall score) */}
+        {interestField && (
+          <Card className="mb-8 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg">Interested Field</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Badge className="text-base px-3 py-1">{interestField}</Badge>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Overall Score Card */}
         <Card className="mb-8 shadow-lg">
           <CardHeader>
