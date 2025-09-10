@@ -14,14 +14,23 @@ const SignUp = () => {
     password: "",
     gender: "",
     age: "",
+    academicClass: "",
+    customClass: "",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.name || !formData.email || !formData.password || !formData.gender || !formData.age) {
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.password ||
+      !formData.gender ||
+      !formData.age ||
+      !formData.academicClass ||
+      (formData.academicClass === "other" && !formData.customClass)
+    ) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -29,7 +38,6 @@ const SignUp = () => {
       });
       return;
     }
-
     if (formData.password.length < 6) {
       toast({
         variant: "destructive",
@@ -38,8 +46,6 @@ const SignUp = () => {
       });
       return;
     }
-
-    // Simulate successful registration
     toast({
       title: "Success",
       description: "Account created successfully! Please sign in.",
@@ -62,7 +68,6 @@ const SignUp = () => {
             Join thousands of students finding their perfect career path
           </p>
         </div>
-
         <Card className="shadow-lg">
           <CardHeader className="space-y-2">
             <CardTitle className="text-2xl font-semibold">Create Account</CardTitle>
@@ -83,7 +88,6 @@ const SignUp = () => {
                   className="h-11"
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -95,7 +99,6 @@ const SignUp = () => {
                   className="h-11"
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -107,10 +110,9 @@ const SignUp = () => {
                   className="h-11"
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="gender">Gender</Label>
-                <Select onValueChange={(value) => updateField("gender", value)}>
+                <Select onValueChange={(value) => updateField("gender", value)} value={formData.gender}>
                   <SelectTrigger className="h-11">
                     <SelectValue placeholder="Select your gender" />
                   </SelectTrigger>
@@ -122,7 +124,6 @@ const SignUp = () => {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="age">Age</Label>
                 <Input
@@ -136,11 +137,38 @@ const SignUp = () => {
                   max="100"
                 />
               </div>
-
+              {/* Academic class/status select + optional input */}
+              <div className="space-y-2">
+                <Label htmlFor="academicClass">Current Class / Status</Label>
+                <Select
+                  onValueChange={(value) => updateField("academicClass", value)}
+                  value={formData.academicClass}
+                >
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Select your class/status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="12th-pursuing">Pursuing 12th</SelectItem>
+                    <SelectItem value="12th-completed">12th Completed</SelectItem>
+                    <SelectItem value="10th-completed">10th Completed</SelectItem>
+                    <SelectItem value="other">Other (specify below)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {formData.academicClass === "other" && (
+                <div className="space-y-2">
+                  <Input
+                    type="text"
+                    placeholder="Please specify your class or academic status"
+                    value={formData.customClass}
+                    onChange={e => updateField("customClass", e.target.value)}
+                    className="h-11"
+                  />
+                </div>
+              )}
               <Button type="submit" className="w-full h-11 mt-6" size="lg">
                 Create Account
               </Button>
-
               <div className="text-center pt-4">
                 <p className="text-sm text-muted-foreground">
                   Already have an account?{" "}
