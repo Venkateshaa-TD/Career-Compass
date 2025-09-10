@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
-// Curated JK career options (unscored interest question)
 const jkCareerGroups: Record<string, string[]> = {
   "Science & Tech": [
     "Doctor (MBBS/AYUSH)",
@@ -101,19 +100,34 @@ const allCareerOptions = Object.entries(jkCareerGroups).flatMap(([group, careers
   careers.map((label) => ({ group, label }))
 );
 
+const groupToSubjects: Record<string, string[]> = {
+  "Science & Tech": ["Physics", "Chemistry", "Mathematics", "Programming"],
+  "Commerce & Management": ["Accountancy", "Commerce"],
+  "Arts & Humanities": [],
+  "Tourism & Hospitality": [],
+  "Agriculture & Allied": [],
+  "Vocational & Trades": [],
+  "Public Sector & Defense": [],
+  "Creative & Media": [],
+  "Sports": [],
+};
+
 const TakeTest = () => {
-  // Unscored interest field
   const [interestQuery, setInterestQuery] = useState("");
-  const [interestField, setInterestField] = useState<string | null>(() => {
-    // Restore if previously chosen
+  const [interestFields, setInterestFields] = useState<string[]>(() => {
     try {
-      return localStorage.getItem("interestField");
+      return JSON.parse(localStorage.getItem("interestFields") || "[]");
     } catch {
-      return null;
+      return [];
     }
   });
 
-  // Scored answers for normal questions
+  const toggleInterest = (label: string) => {
+    setInterestFields((prev) =>
+      prev.includes(label) ? prev.filter((f) => f !== label) : [...prev, label]
+    );
+  };
+
   const [answers, setAnswers] = useState<{ [key: number]: number }>({});
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -125,6 +139,18 @@ const TakeTest = () => {
       (o) => o.label.toLowerCase().includes(q) || o.group.toLowerCase().includes(q)
     );
   }, [interestQuery]);
+
+  const relatedQuestions = useMemo(() => {
+    if (interestFields.length === 0) return [];
+    const selectedGroups = allCareerOptions
+      .filter(opt => interestFields.includes(opt.label))
+      .map(opt => opt.group);
+    const mappedSubjects = new Set<string>();
+    selectedGroups.forEach(grp => {
+      (groupToSubjects[grp] || []).forEach(subj => mappedSubjects.add(subj));
+    });
+    return questions.filter(q => mappedSubjects.has(q.subject));
+  }, [interestFields]);
 
   const handleAnswerSelect = (questionId: number, answerIndex: number) => {
     setAnswers((prev) => ({ ...prev, [questionId]: answerIndex }));
@@ -139,20 +165,17 @@ const TakeTest = () => {
       });
       return;
     }
-    // Save answers
     localStorage.setItem("quizAnswers", JSON.stringify(answers));
-    // Save the chosen interest field separately (can be empty if not chosen)
-    if (interestField) {
-      localStorage.setItem("interestField", interestField);
+    if (interestFields.length) {
+      localStorage.setItem("interestFields", JSON.stringify(interestFields));
     } else {
-      localStorage.removeItem("interestField");
+      localStorage.removeItem("interestFields");
     }
     navigate("/result");
   };
 
   return (
     <div className="container py-8 space-y-8">
-      {/* Distinct interest question (not numbered, unscored) */}
       <Card className="relative overflow-hidden border-0 shadow-md bg-gradient-to-br from-sky-50 via-indigo-50 to-cyan-50 dark:from-sky-900/30 dark:via-indigo-900/30 dark:to-cyan-900/30">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(56,189,248,0.15),transparent_40%),radial-gradient(ellipse_at_bottom_left,rgba(79,70,229,0.12),transparent_45%)]" />
         <CardHeader className="relative">
@@ -163,11 +186,9 @@ const TakeTest = () => {
         <CardContent className="relative space-y-5">
           <div className="space-y-1">
             <p className="text-sm font-medium text-foreground/90">
-              Tell us what excites you the most
-            
+              Tell us what excites you the most (Select multiple)
             </p>
           </div>
-
           <div className="flex items-center gap-3">
             <Input
               placeholder="Search careers or fields (e.g., Doctor, Engineer, Tourism)…"
@@ -175,40 +196,39 @@ const TakeTest = () => {
               onChange={(e) => setInterestQuery(e.target.value)}
               className="flex-1 bg-white/70 dark:bg-white/10 backdrop-blur border-white/60 dark:border-white/10"
             />
-            {interestField && (
-              <Badge variant="secondary" className="text-xs px-2.5 py-1 bg-white/70 dark:bg-white/10">
-                {interestField}
-              </Badge>
+            {interestFields.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {interestFields.map((f) => (
+                  <Badge key={f} variant="secondary" className="text-xs px-2.5 py-1 bg-white/70 dark:bg-white/10">
+                    {f}
+                  </Badge>
+                ))}
+              </div>
             )}
-            {interestField && (
+            {interestFields.length > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setInterestField(null)}
+                onClick={() => setInterestFields([])}
                 className="text-foreground/70 hover:text-foreground"
               >
                 Clear
               </Button>
             )}
           </div>
-
-          {/* Option grid with vertical dividers (Option A) */}
           <div className="rounded-xl border border-white/60 dark:border-white/10 bg-white/60 dark:bg-white/5 backdrop-blur">
-            <div className="p-3 pb-0 text-xs text-foreground/70">Suggestions</div>
-
-            {/* Divider lines appear at md and above */}
+            <div className="p-3 pb-0 text-xs text-foreground/70">Suggestions (Select multiple)</div>
             <div className="relative p-3">
               <div className="hidden md:block pointer-events-none absolute inset-y-3 left-1/3 w-px bg-foreground/10"></div>
               <div className="hidden md:block pointer-events-none absolute inset-y-3 left-2/3 w-px bg-foreground/10"></div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {filteredOptions.map((opt) => {
-                  const active = interestField === opt.label;
+                  const active = interestFields.includes(opt.label);
                   return (
                     <button
                       key={opt.group + opt.label}
                       type="button"
-                      onClick={() => setInterestField(opt.label)}
+                      onClick={() => toggleInterest(opt.label)}
                       className={`text-left rounded-lg px-3 py-3 transition-all border ${
                         active
                           ? "bg-primary/10 border-primary/40 ring-2 ring-primary/25 text-foreground"
@@ -240,9 +260,8 @@ const TakeTest = () => {
         </CardContent>
       </Card>
 
-      {/* Regular scored questions */}
       <div className="space-y-4">
-        {questions.map((q) => (
+        {relatedQuestions.map((q) => (
           <QuestionCard
             key={q.id}
             question={q}
