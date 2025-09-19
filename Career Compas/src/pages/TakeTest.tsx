@@ -103,13 +103,14 @@ const allCareerOptions = Object.entries(jkCareerGroups).flatMap(([group, careers
 const groupToSubjects: Record<string, string[]> = {
   "Science & Tech": ["Physics", "Chemistry", "Mathematics", "Programming"],
   "Commerce & Management": ["Accountancy", "Commerce"],
-  "Arts & Humanities": [],
-  "Tourism & Hospitality": [],
-  "Agriculture & Allied": [],
-  "Vocational & Trades": [],
-  "Public Sector & Defense": [],
-  "Creative & Media": [],
-  "Sports": [],
+  "Arts & Humanities": ["Arts & Humanities"],
+  "Tourism & Hospitality": ["Tourism & Hospitality"],
+  "Social Sciences": ["Social Sciences"],
+  "Agriculture & Allied": ["Agriculture & Allied"],
+  "Vocational & Trades": ["Vocational & Trades"],
+  "Public Sector & Defense": ["Public Sector & Defense"],
+  "Creative & Media": ["Creative & Media"],
+  "Sports": ["Sports"],
 };
 
 const TakeTest = () => {
@@ -142,12 +143,22 @@ const TakeTest = () => {
 
   const relatedQuestions = useMemo(() => {
     if (interestFields.length === 0) return [];
-    const selectedGroups = allCareerOptions
-      .filter(opt => interestFields.includes(opt.label))
-      .map(opt => opt.group);
+    // Get all unique groups for selected careers
+    const selectedGroups = new Set(
+      allCareerOptions
+        .filter(opt => interestFields.includes(opt.label))
+        .map(opt => opt.group)
+    );
+    // Get all subjects for those groups
     const mappedSubjects = new Set<string>();
     selectedGroups.forEach(grp => {
       (groupToSubjects[grp] || []).forEach(subj => mappedSubjects.add(subj));
+    });
+    // If a group has no mapped subjects, try to use the group name as subject (for Arts & Humanities, etc.)
+    selectedGroups.forEach(grp => {
+      if ((groupToSubjects[grp] || []).length === 0) {
+        mappedSubjects.add(grp);
+      }
     });
     return questions.filter(q => mappedSubjects.has(q.subject));
   }, [interestFields]);
