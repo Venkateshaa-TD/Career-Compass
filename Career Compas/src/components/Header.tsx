@@ -6,7 +6,9 @@ import { ChevronDown } from "lucide-react";
 
 interface HeaderProps {
   user: {
-    name: string;
+    id: string;
+    email: string;
+    name?: string;
     photoUrl?: string;
   } | null;
 }
@@ -28,16 +30,18 @@ const Header = ({ user }: HeaderProps) => {
           />
           <div>
             <h1 className="text-2xl font-bold text-primary leading-tight">Career Compass</h1>
-            <p className="text-xs text-muted-foreground">Especially for students of Jammu and Kashmir</p>
+            <p className="text-xs text-muted-foreground">Creating a path for Student's Career</p>
           </div>
         </div>
 
         {/* Navigation */}
         <nav className="flex space-x-6 text-sm font-medium text-gray-700">
           <Link to="/" className="hover:text-primary transition-colors">Home</Link>
-          <Link to="/take-test" className="hover:text-primary transition-colors">Take Test</Link>
+          <Link to="/take-test" className="hover:text-primary transition-colors">Test Myself</Link>
           <Link to="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
           <Link to="/colleges" className="hover:text-primary transition-colors">Colleges</Link>
+          <Link to="/course-map" className="hover:text-primary transition-colors">Course Map</Link>
+          <Link to="/timeline" className="hover:text-primary transition-colors">Timeline</Link>
         </nav>
 
         {/* User section */}
@@ -54,10 +58,10 @@ const Header = ({ user }: HeaderProps) => {
                   <img src={user.photoUrl} alt="User avatar" className="h-8 w-8 rounded-full object-cover" />
                 ) : (
                   <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center font-semibold uppercase">
-                    {user.name.charAt(0)}
+                    {(user.name ? user.name.charAt(0) : user.email.charAt(0)).toUpperCase()}
                   </div>
                 )}
-                <span className="font-semibold">{user.name}</span>
+                <span className="font-semibold">{user.name || user.email}</span>
                 <ChevronDown className="h-4 w-4 text-gray-500" />
               </button>
 
@@ -76,6 +80,15 @@ const Header = ({ user }: HeaderProps) => {
                     Profile
                   </button>
                   <button
+                    className="w-full px-4 py-2 text-left hover:bg-gray-100"
+                    onClick={() => {
+                      setShowProfileModal(true);
+                      setDropdownOpen(false);
+                    }}
+                  >
+                    Edit Profile
+                  </button>
+                  <button
                     className="w-full px-4 py-2 text-left hover:bg-gray-100 text-red-600"
                     onClick={() => {
                       logout();
@@ -91,10 +104,6 @@ const Header = ({ user }: HeaderProps) => {
                 <ProfileModal
                   user={user}
                   onClose={() => setShowProfileModal(false)}
-                  onSave={(updatedUser) => {
-                    // Update user logic here, e.g., update context or make API call
-                    setShowProfileModal(false);
-                  }}
                 />
               )}
             </>
