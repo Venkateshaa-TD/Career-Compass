@@ -44,11 +44,19 @@ const SignIn = () => {
     // Fetch user profile from users_profile table
     const { data: profileData } = await supabase
       .from('users_profile')
-      .select('name')
+      .select('name, age, gender, academic_class, custom_class')
       .eq('id', data.user.id)
       .single();
     // Set user in AuthContext
-    login({ name: profileData?.name || email });
+    login({
+      id: data.user.id,
+      email: data.user.email,
+      name: profileData?.name || data.user.email,
+      age: profileData?.age,
+      gender: profileData?.gender,
+      academic_class: profileData?.academic_class,
+      custom_class: profileData?.custom_class,
+    });
     toast({
       title: "Success",
       description: "Signed in successfully!",
