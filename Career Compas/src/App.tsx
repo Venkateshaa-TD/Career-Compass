@@ -11,9 +11,11 @@ import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import Result from "./pages/Result";
 import Colleges from "./pages/Colleges";
+import CourseMap from "./pages/CourseMap";
 import TakeTest from "./pages/TakeTest";
 import NotFound from "./pages/NotFound";
 import { useAuth } from "@/context/AuthContext";
+import Timeline from "./pages/Timeline";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +63,22 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <Colleges />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/course-map"
+              element={
+                <ProtectedRoute>
+                  <CourseMap />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/timeline"
+              element={
+                <ProtectedRoute>
+                  <Timeline />
                 </ProtectedRoute>
               }
             />
