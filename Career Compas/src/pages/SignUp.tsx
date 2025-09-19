@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,10 +18,12 @@ const SignUp = () => {
     academicClass: "",
     customClass: "",
   });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    setLoading(true);
     e.preventDefault();
     if (
       !formData.name ||
@@ -36,6 +39,7 @@ const SignUp = () => {
         title: "Error",
         description: "Please fill in all fields",
       });
+      setLoading(false);
       return;
     }
     if (formData.password.length < 6) {
@@ -44,12 +48,48 @@ const SignUp = () => {
         title: "Error",
         description: "Password must be at least 6 characters",
       });
+      setLoading(false);
+      return;
+    }
+    // Register user with Supabase Auth
+    const { data, error } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+    });
+    if (error || !data.user) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error ? error.message : "Signup failed.",
+      });
+      setLoading(false);
+      return;
+    }
+    // Insert profile data into users_profile table
+    const { error: profileError } = await supabase.from('users_profile').insert([
+      {
+        id: data.user.id,
+        name: formData.name,
+        gender: formData.gender,
+        age: parseInt(formData.age, 10),
+        academic_class: formData.academicClass,
+        custom_class: formData.customClass,
+      }
+    ]);
+    if (profileError) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: profileError.message,
+      });
+      setLoading(false);
       return;
     }
     toast({
       title: "Success",
       description: "Account created successfully! Please sign in.",
     });
+    setLoading(false);
     navigate("/signin");
   };
 
@@ -166,8 +206,18 @@ const SignUp = () => {
                   />
                 </div>
               )}
-              <Button type="submit" className="w-full h-11 mt-6" size="lg">
-                Create Account
+              <Button type="submit" className="w-full h-11 mt-6" size="lg" disabled={loading}>
+                {loading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    Creating...
+                  </span>
+                ) : (
+                  'Create Account'
+                )}
               </Button>
               <div className="text-center pt-4">
                 <p className="text-sm text-muted-foreground">
