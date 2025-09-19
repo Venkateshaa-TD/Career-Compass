@@ -1,4 +1,11 @@
 import { useEffect, useState, useMemo } from "react";
+
+interface SubjectScore {
+  subject: string;
+  correct: number;
+  total: number;
+  percentage: number;
+}
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +13,49 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Trophy, Target, BookOpen, RotateCcw } from "lucide-react";
 import { questions, subjects } from "@/data/questions";
+// ...existing code...
+// Map streams to career options (from Dashboard)
+const streamCareers: Record<string, string[]> = {
+  Science: [
+    "Doctor / Medical Professional",
+    "Engineer",
+    "Research Scientist",
+    "Biotechnologist",
+    "Software Developer",
+    "Pharmacist",
+    "Data Analyst",
+    "Environmental Scientist",
+  ],
+  Commerce: [
+    "Chartered Accountant (CA)",
+    "Company Secretary (CS)",
+    "Banking & Finance Professional",
+    "Business Analyst",
+    "Marketing Manager",
+    "Entrepreneur",
+    "Investment Banker",
+  ],
+  "Arts & Humanities": [
+    "Civil Services",
+    "Teacher / Lecturer",
+    "Lawyer",
+    "Psychologist",
+    "Journalist",
+    "Social Worker",
+    "Historian",
+    "Linguist",
+  ],
+  Vocational: [
+    "IT Support Specialist",
+    "Electrician",
+    "Chef / Hotel Manager",
+    "Agricultural Entrepreneur",
+    "Beautician",
+    "Auto Mechanic",
+    "Fashion Designer",
+    "Mobile Repair Technician",
+  ],
+};
 
 interface SubjectScore {
   subject: string;
@@ -14,10 +64,77 @@ interface SubjectScore {
   percentage: number;
 }
 
+
 const Result = () => {
   const [scores, setScores] = useState<SubjectScore[]>([]);
   const [totalScore, setTotalScore] = useState({ correct: 0, total: 0, percentage: 0 });
   const navigate = useNavigate();
+
+  // Map subjects to streams for recommendations
+  const subjectToStream: Record<string, string> = {
+    Physics: "Science",
+    Chemistry: "Science",
+    Biology: "Science",
+    Mathematics: "Science",
+    "Computer Science": "Science",
+    Accountancy: "Commerce",
+    "Business Studies": "Commerce",
+    Economics: "Commerce",
+    "Informatics Practices": "Commerce",
+    History: "Arts & Humanities",
+    "Political Science": "Arts & Humanities",
+    Geography: "Arts & Humanities",
+    Psychology: "Arts & Humanities",
+    Sociology: "Arts & Humanities",
+    Languages: "Arts & Humanities",
+    "Arts & Humanities": "Arts & Humanities",
+    "Tourism & Hospitality": "Vocational",
+    "Social Sciences": "Arts & Humanities",
+    "Agriculture & Allied": "Vocational",
+    "Vocational & Trades": "Vocational",
+    "Public Sector & Defense": "Vocational",
+    "Creative & Media": "Vocational",
+    Sports: "Vocational",
+  };
+
+
+  // Enhanced: Find top recommended streams and their career options
+  const { recommendedStreams, recommendedCareers } = useMemo(() => {
+    // Aggregate scores by stream
+    const streamScores: Record<string, { correct: number; total: number }> = {};
+    scores.forEach((score) => {
+      const stream = subjectToStream[score.subject];
+      if (!stream) return;
+      if (!streamScores[stream]) streamScores[stream] = { correct: 0, total: 0 };
+      streamScores[stream].correct += score.correct;
+      streamScores[stream].total += score.total;
+    });
+    // Calculate percentage for each stream
+    const streamPercentages = Object.entries(streamScores).map(([stream, { correct, total }]) => ({
+      stream,
+      correct,
+      total,
+      percentage: total > 0 ? (correct / total) * 100 : 0,
+    }));
+    // Find max percentage
+    const max = streamPercentages.reduce((acc, cur) => Math.max(acc, cur.percentage), 0);
+    // If all zero, recommend all chosen streams
+    let topStreams;
+    if (max === 0) {
+      topStreams = streamPercentages.map(s => s.stream);
+    } else {
+      topStreams = streamPercentages.filter(s => s.percentage === max).map(s => s.stream);
+    }
+    // Get careers for those streams
+    let careers: string[] = [];
+    topStreams.forEach(stream => {
+      if (streamCareers[stream]) careers = careers.concat(streamCareers[stream]);
+    });
+    return {
+      recommendedStreams: streamPercentages.sort((a, b) => b.percentage - a.percentage).slice(0, 3),
+      recommendedCareers: careers,
+    };
+  }, [scores]);
 
   useEffect(() => {
     const savedAnswers = localStorage.getItem('quizAnswers');
@@ -80,7 +197,7 @@ const Result = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-background">
+  <div className="min-h-screen bg-gradient-to-br from-background via-muted to-background">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b shadow-sm">
         <div className="container mx-auto px-4 py-4">
@@ -103,7 +220,38 @@ const Result = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+  <div className="container mx-auto px-4 py-8">
+
+        {/* Recommended Streams & Careers Section */}
+        {recommendedStreams.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Top Recommended Streams for You</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-4 mb-2">
+                {recommendedStreams.map((rec) => (
+                  <Badge key={rec.stream} className="text-base px-4 py-2 bg-primary/10 text-primary border-primary/30">
+                    {rec.stream} ({Math.round(rec.percentage)}%)
+                  </Badge>
+                ))}
+              </div>
+              <div className="text-muted-foreground text-sm mb-2">
+                These streams are suggested based on your subject performance. Explore them to find your best fit!
+              </div>
+              {recommendedCareers.length > 0 && (
+                <div className="mt-4">
+                  <h3 className="font-semibold mb-2">Recommended Career Options:</h3>
+                  <ul className="list-disc ml-6 space-y-1">
+                    {recommendedCareers.map((career) => (
+                      <li key={career}>{career}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* ADDED: Interested Field (minimal, above overall score) */}
         {interestField && (
@@ -212,43 +360,22 @@ const Result = () => {
           </div>
         </div>
 
-        {/* Recommendations */}
+        {/* Recommended Streams */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Career Recommendations</CardTitle>
+            <CardTitle>Recommended Streams for You</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {totalScore.percentage >= 80 && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <h4 className="font-semibold text-green-800 mb-2">Excellent Performance!</h4>
-                  <p className="text-green-700 text-sm">
-                    Your strong performance across subjects suggests you have excellent analytical and problem-solving skills. 
-                    Consider careers in engineering, research, medicine, or advanced technology fields.
-                  </p>
-                </div>
-              )}
-              
-              {totalScore.percentage >= 60 && totalScore.percentage < 80 && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="font-semibold text-blue-800 mb-2">Good Performance!</h4>
-                  <p className="text-blue-700 text-sm">
-                    You show good understanding across multiple subjects. Focus on your strongest areas while improving weaker subjects. 
-                    Consider careers in business, education, or specialized technical fields.
-                  </p>
-                </div>
-              )}
-              
-              {totalScore.percentage < 60 && (
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <h4 className="font-semibold text-yellow-800 mb-2">Room for Improvement</h4>
-                  <p className="text-yellow-700 text-sm">
-                    Focus on strengthening your foundation in key subjects. Consider additional practice and guidance. 
-                    Explore careers that align with your interests and consider skill development programs.
-                  </p>
-                </div>
-              )}
+            <div className="flex flex-wrap gap-4 mb-4">
+              {recommendedStreams.map((rec) => (
+                <Badge key={rec.stream} className="text-base px-4 py-2 bg-primary/10 text-primary border-primary/30">
+                  {rec.stream} ({Math.round(rec.percentage)}%)
+                </Badge>
+              ))}
             </div>
+            <Button variant="outline" size="sm" onClick={() => alert('Stream comparison coming soon!')}>
+              Compare Streams
+            </Button>
           </CardContent>
         </Card>
 
