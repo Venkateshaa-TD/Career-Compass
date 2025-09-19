@@ -1,9 +1,17 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
+
 
 interface User {
-  name: string;
-  photoUrl?: string;
+  id: string;
+  email: string;
+  name?: string;
+  age?: number;
+  gender?: string;
+  academic_class?: string;
+  custom_class?: string;
 }
+
 
 interface AuthContextType {
   user: User | null;
@@ -16,20 +24,68 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  // Load user from localStorage on mount
+  // On mount, check for Supabase session
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser));
+    const getSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (data.session && data.session.user) {
+        // Fetch full profile from users_profile
+        const { data: profile } = await supabase
+          .from('users_profile')
+          .select('name, age, gender, academic_class, custom_class')
+          .eq('id', data.session.user.id)
+          .single();
+        setUser({
+          id: data.session.user.id,
+          email: data.session.user.email ?? '',
+          name: profile?.name,
+          age: profile?.age,
+          gender: profile?.gender,
+          academic_class: profile?.academic_class,
+          custom_class: profile?.custom_class,
+        });
+      } else {
+        setUser(null);
+      }
+    };
+    getSession();
+
+    // Listen for auth state changes
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session && session.user) {
+        // Fetch full profile from users_profile
+        supabase
+          .from('users_profile')
+          .select('name, age, gender, academic_class, custom_class')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profile }) => {
+            setUser({
+              id: session.user.id,
+              email: session.user.email ?? '',
+              name: profile?.name,
+              age: profile?.age,
+              gender: profile?.gender,
+              academic_class: profile?.academic_class,
+              custom_class: profile?.custom_class,
+            });
+          });
+      } else {
+        setUser(null);
+      }
+    });
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
   }, []);
 
   const login = (userData: User) => {
     setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem("user");
   };
 
   return (
