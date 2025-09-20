@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Trophy, Target, BookOpen, RotateCcw } from "lucide-react";
+import { ArrowLeft, Trophy, Target, BookOpen, RotateCcw, CheckCircle2, MessageCircle } from "lucide-react";
 import { questions, subjects } from "@/data/questions";
 import openai from "../lib/geminiClient"; // Gemini client
 
@@ -194,10 +194,10 @@ const Result = () => {
         const prompt = `A student completed a career aptitude test with these subject scores: ${JSON.stringify(scores)}.
 Overall score: ${totalScore.percentage}%.
 Top recommended streams: ${recommendedStreams.map(s => s.stream).join(", ")}.
-Provide personalized career advice and recommended careers based on these results.`;
+Provide a VERY CONCISE career advice in 3–5 bullet points only. and give them the best suitable career options and practical recommandations based on their scores and interests.`;
 
         const model = openai.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const chat = model.startChat({ history: [], generationConfig: { maxOutputTokens: 500 } });
+        const chat = model.startChat({ history: [], generationConfig: { maxOutputTokens: 150 } });
         const response = await chat.sendMessage(prompt);
         setAiAdvice(response.response?.text() || "Sorry, AI could not provide advice.");
       } catch (err) {
@@ -209,6 +209,28 @@ Provide personalized career advice and recommended careers based on these result
 
     fetchAdvice();
   }, [scores, totalScore, recommendedStreams]);
+
+  const renderEnhancedAdvice = (advice: string) => {
+    const lines = advice
+      .split(/\n|(?:\u2022)|(?:- )/)
+      .map(l => l.trim())
+      .filter(l => l.length > 2);
+
+    if (lines.length <= 1) {
+      return <p className="leading-relaxed">{advice}</p>;
+    }
+
+    return (
+      <ul className="space-y-3">
+        {lines.map((line, i) => (
+          <li key={i} className="flex items-start gap-2">
+            <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+            <span className="leading-snug">{line}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted to-background">
@@ -372,7 +394,23 @@ Provide personalized career advice and recommended careers based on these result
             {loadingAdvice ? (
               <p>Loading advice...</p>
             ) : (
-              <div className="bg-muted/20 p-4 rounded">{aiAdvice}</div>
+              <div className="bg-muted/20 p-4 rounded space-y-4">
+                {renderEnhancedAdvice(aiAdvice)}
+
+                {/* 🌟 NEW BUTTON TO CHAT PAGE */}
+                <div className="pt-4 text-center border-t">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Try our AI Advisor
+                  </p>
+                  <Button
+                    onClick={() => navigate("/chat")}
+                    className="px-6"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Chat with AI
+                  </Button>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
