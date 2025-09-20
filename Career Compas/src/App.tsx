@@ -16,7 +16,7 @@ import TakeTest from "./pages/TakeTest";
 import NotFound from "./pages/NotFound";
 import { useAuth } from "@/context/AuthContext";
 import Timeline from "./pages/Timeline";
-
+import ChatWithAI from "./pages/ChatWithAI";
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -33,6 +33,7 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/signin" element={user ? <Index /> : <SignIn />} />
             <Route path="/signup" element={user ? <Index /> : <SignUp />} />
+            <Route path="/chat" element={<ChatWithAI />} />
             {/* Protected routes */}
             <Route
               path="/dashboard"
