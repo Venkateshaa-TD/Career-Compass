@@ -194,7 +194,7 @@ const Result = () => {
         const prompt = `A student completed a career aptitude test with these subject scores: ${JSON.stringify(scores)}.
 Overall score: ${totalScore.percentage}%.
 Top recommended streams: ${recommendedStreams.map(s => s.stream).join(", ")}.
-Provide a VERY CONCISE career advice in 3–5 bullet points only. and give them the best suitable career options and practical recommandations based on their scores and interests.`;
+Provide a VERY CONCISE career advice in 3–6 bullet points.Give them the career they can choose too and give them the best suitable career options and practical recommandations based on interests.`;
 
         const model = openai.getGenerativeModel({ model: "gemini-1.5-flash" });
         const chat = model.startChat({ history: [], generationConfig: { maxOutputTokens: 150 } });
